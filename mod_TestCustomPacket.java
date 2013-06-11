@@ -1,22 +1,32 @@
 package net.minecraft.src;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+
 import net.minecraft.client.Minecraft;
 
 public class mod_TestCustomPacket extends BaseMod{
     
 
+	private static final File gmDirectory = new File(Minecraft.getMinecraftDir(), "/Minecade_GM/");
+	private static final File gmLog = new File(gmDirectory, "Minecade_250Packets.txt");
+
+	
     public mod_TestCustomPacket() 
     {
     }
 
     public String getName() 
     {
-        return "scb";
+        return "mod_TestCustomPacket";
     }
 
     public String getVersion() 
     {
-        return "1.0";
+        return "0.1";
     }
 
     public void load() 
@@ -26,11 +36,21 @@ public class mod_TestCustomPacket extends BaseMod{
         ModLoader.registerPacketChannel(this, "walls");
 
     }
-    
-    public boolean onTickInGame(float f, Minecraft mc)
-    {
 
-        return true;
+
+    
+    // ModLoader @ MC 1.3+
+    public void clientCustomPayload(NetClientHandler clientHandler, Packet250CustomPayload packet250custompayload)
+    {
+    	this.storeAction("CLIENT Packet 250 received!!");
+
+    }
+    
+    
+    public void serverCustomPayload(NetServerHandler clientHandler, Packet250CustomPayload packet250custompayload){
+			
+    	this.storeAction("SERVER Packet 250 received!!");
+    	
     }
     
 
@@ -45,31 +65,6 @@ public class mod_TestCustomPacket extends BaseMod{
 
     
     // ModLoader @ MC 1.2.5
-    public void receiveCustomPacket(Packet250CustomPayload packet250custompayload)
-    {
-        if (packet250custompayload.channel.equalsIgnoreCase("scb"))
-        {
-            handleMCMessage(packet250custompayload.data);
-        }else if (packet250custompayload.channel.equalsIgnoreCase("walls"))
-        {
-            handleMCMessage(packet250custompayload.data);
-        } 
-    }
-    
-    // ModLoader @ MC 1.3+
-    public void clientCustomPayload(NetClientHandler clientHandler, Packet250CustomPayload packet250custompayload)
-    {
-        receiveCustomPacket(packet250custompayload);
-    }
-    
-    
-    private void handleMCMessage(byte[] message)
-    {
-        System.out.println("Custom Packet Received: " + message[0]);
-    }
-    
-    
-    // ModLoader @ MC 1.2.5
     public void serverConnect(NetClientHandler netclienthandler) {
         sendMessage("scb", "REGISTER", netclienthandler);
         sendMessage("walls", "REGISTER", netclienthandler);
@@ -80,4 +75,29 @@ public class mod_TestCustomPacket extends BaseMod{
         serverConnect(netclienthandler);
     }
 
+    
+    /**
+     * store the action the GM took.....
+     * @throws IOException
+     */
+    public void storeAction(String aAction){
+
+        try {
+        	this.gmDirectory.mkdir();
+
+            if (gmLog.exists() || gmLog.createNewFile())
+            {
+            
+        	    PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(gmLog, true)));
+        	    out.println(aAction);
+        	    out.close();
+            }
+            
+          
+        }catch (IOException ioe){
+        	
+        }
+    	
+    }
+       
 }
